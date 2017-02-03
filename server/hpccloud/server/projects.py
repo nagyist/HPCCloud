@@ -138,6 +138,8 @@ class Projects(Resource):
         Description('Share a give project with a set of users or groups')
         .param('id', 'The project to shared.',
                dataType='string', required=True, paramType='path')
+        .param('body', 'Array of users to share the project with.',
+               dataType='object', required=True, paramType='body')
     )
     @access.user
     @loadmodel(model='project', plugin='hpccloud', level=AccessType.WRITE)

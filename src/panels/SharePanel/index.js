@@ -12,6 +12,7 @@ const SharePanel = React.createClass({
   displayName: 'SharePanel',
 
   propTypes: {
+    currentUser: React.PropTypes.object,
     userMap: React.PropTypes.object,
     project: React.PropTypes.object,
     onMount: React.PropTypes.func,
@@ -22,8 +23,42 @@ const SharePanel = React.createClass({
     return { userMap: {} };
   },
 
+  getInitialState() {
+    return { shareUsers: [], unShareUsers: [] };
+  },
+
   componentDidMount() {
     this.props.onMount();
+  },
+
+  handleChange(e) {
+    const which = e.target.dataset.which;
+    const options = e.target.options;
+    const values = [];
+    for (let i = 0, l = options.length; i < l; i++) {
+      if (options[i].selected) {
+        values.push(options[i].value);
+      }
+    }
+    this.setState({ [which]: values });
+  },
+
+  shareProject(e) {
+    console.log('share unimplemented', this.state.shareUsers);
+  },
+
+  unShareProject(e) {
+    if (this.state.unShareUsers.indexOf(this.props.project.userId) !== -1) {
+      console.log('Cannot remove the owner from their own project.');
+      return;
+    }
+
+    if (this.state.unShareUsers.indexOf(this.props.currentUser._id) !== -1) {
+      console.log('You cannot remove yourself from this project');
+      return;
+    }
+
+    console.log('unshare unimplemented', this.unShareUsers);
   },
 
   render() {
@@ -31,22 +66,25 @@ const SharePanel = React.createClass({
     const projectUsers = this.props.project.access.users.reduce((prev, cur) => prev.concat([cur.id]), []);
     return (<div>
         <div className={style.group}>
-          <label className={style.label}>Access</label>
-          <ul>
+          <label className={style.label}>User Access</label>
+          <select multiple data-which="unShareUsers" className={style.input}
+            onChange={this.handleChange} value={this.state.unShareUsers}>
             { projectUsers.map((_id, i) => {
               const name = hasUsers ? this.props.userMap[_id].login : '';
-              return <li key={`${_id}_${i}`}>{ name }<button>Remove</button></li>;
+              return <option key={`${_id}_${i}`} value={_id}>{ name }</option>;
             }) }
-          </ul>
+          </select>
+          <button onClick={this.unShareProject}>Remove</button>
         </div>
         <div className={style.group}>
-          <label className={style.label}>Share with</label>
-          <select>
+          <label className={style.label}>Share with Users</label>
+          <select multiple data-which="shareUsers" className={style.input}
+            onChange={this.handleChange} value={this.state.shareUsers}>
             { Object.keys(this.props.userMap).filter((userId) => projectUsers.indexOf(userId) === -1)
-              .map((userId, i) => <option key={`${userId}_${i}`}>{ hasUsers ? this.props.userMap[userId].login : '' }</option>)
+              .map((userId, i) => <option key={`${userId}_${i}`} value={userId}>{ hasUsers ? this.props.userMap[userId].login : '' }</option>)
             }
           </select>
-          <button>Add</button>
+          <button onClick={this.shareProject}>Add</button>
         </div>
       </div>);
   },
@@ -55,6 +93,7 @@ const SharePanel = React.createClass({
 
 export default connect(
   (state, props) => ({
+    currentUser: state.auth.user,
     userMap: state.auth.userMap,
   }),
   () => ({
