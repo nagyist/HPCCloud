@@ -7,6 +7,7 @@ import { connect }  from 'react-redux';
 import { dispatch } from '../../redux';
 
 import style    from 'HPCCloudStyle/ItemEditor.mcss';
+import layout   from 'HPCCloudStyle/Layout.mcss';
 
 const SharePanel = React.createClass({
   displayName: 'SharePanel',
@@ -67,24 +68,36 @@ const SharePanel = React.createClass({
     return (<div>
         <div className={style.group}>
           <label className={style.label}>User Access</label>
-          <select multiple data-which="unShareUsers" className={style.input}
-            onChange={this.handleChange} value={this.state.unShareUsers}>
-            { projectUsers.map((_id, i) => {
-              const name = hasUsers ? this.props.userMap[_id].login : '';
-              return <option key={`${_id}_${i}`} value={_id}>{ name }</option>;
-            }) }
-          </select>
-          <button onClick={this.unShareProject}>Remove</button>
+          <div className={[layout.verticalFlexContainer, layout.flexGrow].join(' ')}>
+            <select multiple data-which="unShareUsers" className={style.input}
+              onChange={this.handleChange} value={this.state.unShareUsers}>
+              { projectUsers.map((_id, i) => {
+                const name = hasUsers ? this.props.userMap[_id].login : '';
+                return <option key={`${_id}_${i}`} value={_id}>{ name }</option>;
+              }) }
+            </select>
+            <button onClick={this.unShareProject}
+              disabled={!this.state.unShareUsers.length}
+              className={style.shareButton}>
+              Remove
+            </button>
+          </div>
         </div>
         <div className={style.group}>
           <label className={style.label}>Share with Users</label>
-          <select multiple data-which="shareUsers" className={style.input}
-            onChange={this.handleChange} value={this.state.shareUsers}>
-            { Object.keys(this.props.userMap).filter((userId) => projectUsers.indexOf(userId) === -1)
-              .map((userId, i) => <option key={`${userId}_${i}`} value={userId}>{ hasUsers ? this.props.userMap[userId].login : '' }</option>)
-            }
-          </select>
-          <button onClick={this.shareProject}>Add</button>
+          <div className={[layout.verticalFlexContainer, layout.flexGrow].join(' ')}>
+            <select multiple data-which="shareUsers" className={style.input}
+              onChange={this.handleChange} value={this.state.shareUsers}>
+              { Object.keys(this.props.userMap).filter((userId) => projectUsers.indexOf(userId) === -1)
+                .map((userId, i) => <option key={`${userId}_${i}`} value={userId}>{ hasUsers ? this.props.userMap[userId].login : '' }</option>)
+              }
+            </select>
+            <button onClick={this.shareProject}
+              disabled={!this.state.shareUsers.length}
+              className={style.shareButton}>
+              Add
+            </button>
+          </div>
         </div>
       </div>);
   },
