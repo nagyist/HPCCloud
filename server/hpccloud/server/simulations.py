@@ -43,6 +43,8 @@ class Simulations(Resource):
         self.route('GET', (':id', 'steps', ':stepName'), self.get_step)
         self.route('PATCH', (':id', 'steps', ':stepName'), self.update_step)
         self.route('GET', (':id', 'download'), self.download)
+        self.route('PUT', (':id', 'share'), self.share)
+        self.route('PUT', (':id', 'unshare'), self.unshare)
 
         self._model = self.model('simulation', 'hpccloud')
 
@@ -218,6 +220,31 @@ class Simulations(Resource):
 
         return self._model.update_step(
             user, simulation, stepName, status, metadata, export, view)
+
+    @describeRoute(
+        Description('Share a simulation with a set of users or groups')
+        .param('id', 'The simulation to be shared.',
+               dataType='string', required=True, paramType='path')
+        .param('body', 'Array of users to share the project with.',
+               dataType='object', required=True, paramType='body')
+    )
+    @access.user
+    @loadmodel(model='simulation', plugin='hpccloud', level=AccessType.WRITE)
+    def share(self, project, params):
+        return 1
+
+    @describeRoute(
+        Description('Revoke permissions for asimulation given a set of users \
+                    or groups')
+        .param('id', 'The simulation to be unshared.',
+               dataType='string', required=True, paramType='path')
+        .param('body', 'Array of users to share the project with.',
+               dataType='object', required=True, paramType='body')
+    )
+    @access.user
+    @loadmodel(model='simulation', plugin='hpccloud', level=AccessType.WRITE)
+    def unshare(self, project, params):
+        return 1
 
     @describeRoute(
         Description('Download all the asset associated with a simulation')

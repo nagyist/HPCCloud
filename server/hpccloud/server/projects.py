@@ -136,7 +136,7 @@ class Projects(Resource):
              'projects')
 
     @describeRoute(
-        Description('Share a give project with a set of users or groups')
+        Description('Share a project with a set of users or groups')
         .param('id', 'The project to shared.',
                dataType='string', required=True, paramType='path')
         .param('body', 'Array of users to share the project with.',
@@ -163,7 +163,8 @@ class Projects(Resource):
         return self._model.share(user, project, users, groups)
 
     @describeRoute(
-        Description('Share a give project with a set of users or groups')
+        Description('Revoke permissions for project given a set of users \
+                    or groups')
         .param('id', 'The project to shared.',
                dataType='string', required=True, paramType='path')
         .param('body', 'Array of users to share the project with.',
