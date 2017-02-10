@@ -235,16 +235,12 @@ class Project(AccessControlledModel):
         project_folder = self.model('folder').load(
             project['folderId'], user=sharer)
 
-        # Share the project folder
-        unshare_folder(
-            sharer, project_folder, users, groups, level=AccessType.READ,
-            recurse=True)
+        # unshare the project folder
+        unshare_folder(sharer, project_folder, users, groups, recurse=True)
 
         # We need to revoke the _simulations folder
         simulations_folder = get_simulations_folder(sharer, project)
-
-        unshare_folder(sharer, simulations_folder, users, groups,
-                       level=AccessType.ADMIN)
+        unshare_folder(sharer, simulations_folder, users, groups)
 
         # Now share any simulation associated with this project
         query = {
