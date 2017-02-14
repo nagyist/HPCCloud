@@ -63,7 +63,7 @@ const visualizer = React.createClass({
     client.getSimulationStep(this.props.simulation._id, this.props.step)
       .then((resp) => {
         const config = {
-          sessionURL: `ws://${this.props.location.hostname}:8888/proxy?sessionId=${resp.data.metadata.sessionId}&path=ws`,
+          sessionURL: `ws://${location.hostname}:8888/proxy?sessionId=${resp.data.metadata.sessionId}&path=ws`,
           retry: true,
         };
         network.connect(config);
