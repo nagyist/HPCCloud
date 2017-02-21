@@ -1,4 +1,5 @@
 import * as Actions from '../actions/groups';
+import deepClone    from 'mout/src/lang/deepClone';
 
 export const initialState = {
   list: [],
@@ -17,7 +18,7 @@ export const groupTemplate = {
 
 export default function groupReducer(state = initialState, action) {
   switch (action.type) {
-    case GET_GROUPS: {
+    case Actions.GET_GROUPS: {
       const list = action.groups;
       const active = (state.active < list.length) ? state.active : (list.length - 1);
       const mapById = Object.assign({}, state.mapById);
@@ -27,21 +28,20 @@ export default function groupReducer(state = initialState, action) {
         }
       });
       return Object.assign({}, state, { list, active, mapById });
-      return initialState;
     }
 
-    case ADD_GROUP: {
+    case Actions.ADD_GROUP: {
       const newGroup = Object.assign({}, groupTemplate);
       newGroup.name = `new group ${state.list.length}`;
       return Object.assign(
         {}, state,
         {
-          list: [].concat(state.list, deepClone(groupTemplate)),
-          active: state.list.filter(tradFilter).length,
+          list: [].concat(state.list, newGroup),
+          active: state.list.length,
         });
     }
 
-    case SAVE_GROUP: {
+    case Actions.SAVE_GROUP: {
       const { index, group } = action;
 
       const list = [].concat(
@@ -58,7 +58,7 @@ export default function groupReducer(state = initialState, action) {
       return Object.assign({}, state, { list, active });
     }
 
-    case DELETE_GROUP: {
+    case Actions.DELETE_GROUP: {
       const list = state.list.filter((item, idx) => idx !== action.index);
       const group = state.list.filter((item, idx) => idx === action.index)[0];
       const active = (state.active < list.length) ? state.active : (list.length - 1);
@@ -72,7 +72,7 @@ export default function groupReducer(state = initialState, action) {
 
       if (group && group._id && state.mapById[group._id]) {
         const mapById = Object.assign({}, state.mapById);
-        delete mapById[cluster._id];
+        delete mapById[group._id];
         return Object.assign(newState, { mapById });
       }
       return newState;
@@ -86,6 +86,10 @@ export default function groupReducer(state = initialState, action) {
       const newUsers = Object.assign({}, state.usersByGroup);
       newUsers[action.groupId] = action.users;
       return Object.assign({}, state, { usersByGroup: newUsers });
+    }
+
+    case Actions.PENDING_GROUP_NETWORK: {
+      return Object.assign({}, state, { pending: action.pending });
     }
 
     default:
