@@ -1,12 +1,13 @@
 import ActiveList       from '../../../panels/ActiveList';
 import Toolbar          from '../../../panels/Toolbar';
+import GroupForm      from './GroupForm';
+import EmptyPlaceholder from '../../../panels/EmptyPlaceholder';
 // import ButtonBar        from '../../../panels/ButtonBar';
-// import EmptyPlaceholder from '../../../panels/EmptyPlaceholder';
 import React            from 'react';
 import { breadcrumb }   from '..';
 // import getNetworkError  from '../../../utils/getNetworkError';
 
-// import theme from 'HPCCloudStyle/Theme.mcss';
+import theme from 'HPCCloudStyle/Theme.mcss';
 import style from 'HPCCloudStyle/PageWithMenu.mcss';
 
 // import get          from 'mout/src/object/get';
@@ -25,6 +26,11 @@ const GroupPrefs = React.createClass({
     user: React.PropTypes.object,
     onAddItem: React.PropTypes.func,
     onActiveChange: React.PropTypes.func,
+    getGroups: React.PropTypes.func,
+  },
+
+  componentDidMount() {
+    this.props.getGroups();
   },
 
   activeChange(active) {
@@ -32,7 +38,25 @@ const GroupPrefs = React.createClass({
   },
 
   render() {
+    const { active, list } = this.props;
+    const activeData = active < list.length ? list[active] : null;
+
     const clusterBreadCrumb = breadcrumb(this.props.user, 'Groups');
+
+    let content = null;
+    if (list && list.length) {
+      content = (<div className={ style.content }>
+        <GroupForm data={activeData} onChange={ this.changeItem } />
+      </div>);
+    } else {
+      content = (<EmptyPlaceholder phrase={
+        <span>
+          There are no Groups available <br />
+          You can create some with the <i className={theme.addIcon} /> above
+        </span> }
+      />);
+    }
+
     return (
       <div className={ style.rootContainer }>
         <Toolbar breadcrumb={ clusterBreadCrumb } title="Groups"
@@ -43,10 +67,10 @@ const GroupPrefs = React.createClass({
           <ActiveList
             className={ style.menu }
             onActiveChange={this.activeChange}
-            active={this.props.active}
-            list={this.props.list}
+            active={active}
+            list={list}
           />
-          { 'some content' }
+          { content }
         </div>
       </div>);
   },
@@ -66,6 +90,8 @@ export default connect(
     };
   },
   () => ({
+    getGroups: () => dispatch(Actions.getGroups()),
+    getUsers: () => dispatch(Actions.getUsers()),
     onAddItem: () => dispatch(Actions.addGroup()),
     onActiveChange: (index) => dispatch(Actions.updateActiveGroup(index)),
     onUpdateItem: (index, group) => dispatch(Actions.saveCluster(index, group)),

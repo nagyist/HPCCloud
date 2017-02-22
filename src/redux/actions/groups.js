@@ -1,6 +1,6 @@
 import client from '../../network';
 import * as netActions from './network';
-import { dispatch } from '..';
+import { store, dispatch } from '..';
 
 export const PENDING_GROUP_NETWORK = 'PENDING_GROUP_NETWORK';
 export const GET_GROUPS = 'GET_GROUPS';
@@ -12,12 +12,30 @@ export const LIST_USERS = 'LIST_USERS';
 
 /* eslint-disable no-shadow */
 
-export function updateActiveGroup(index) {
-  return { type: UPDATE_ACTIVE_GROUP, index };
-}
-
 export function listUsers(groupId, users) {
   return { type: LIST_USERS, groupId, users };
+}
+
+export function getGroupUsers(id) {
+  const action = netActions.addNetworkCall('group_access', `List group access ${id}`);
+  return dispatch => {
+    client.getGroupAccess(id)
+      .then((resp) => {
+        dispatch(netActions.successNetworkCall(action.id, resp));
+        dispatch(listUsers(id, resp.data.access.users));
+      })
+      .catch((err) => {
+        dispatch(netActions.errorNetworkCall(action.id, err));
+      });
+    return action;
+  };
+}
+
+export function updateActiveGroup(index) {
+  return dispatch => {
+    dispatch(getGroupUsers(store.getState().groups.list[index]._id));
+    return { type: UPDATE_ACTIVE_GROUP, index };
+  };
 }
 
 export function pendingNetworkCall(pending = true) {
@@ -33,6 +51,9 @@ export function getGroups() {
         (resp) => {
           dispatch(netActions.successNetworkCall(action.id, resp));
           dispatch({ type: GET_GROUPS, groups: resp.data });
+          if (resp.data.length) {
+            dispatch(getGroupUsers(resp.data[0]._id));
+          }
           dispatch(pendingNetworkCall(false));
         },
         (err) => {
@@ -90,20 +111,6 @@ export function deleteGroup(id) {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
       });
     return action;
-  };
-}
-
-export function getGroupUsers(id) {
-  const action = netActions.addNetworkCall('group_access', `List group access ${id}`);
-  return dispatch => {
-    client.getGroupAccess(id)
-      .then((resp) => {
-        dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch(listUsers(id, resp.data.access.users));
-      })
-      .catch((err) => {
-        dispatch(netActions.errorNetworkCall(action.id, err));
-      });
   };
 }
 
