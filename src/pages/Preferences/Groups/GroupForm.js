@@ -1,9 +1,18 @@
 import React  from 'react';
 import style  from 'HPCCloudStyle/ItemEditor.mcss';
-import layout from 'HPCCloudStyle/Layout.mcss';
 
 export default React.createClass({
   displayName: 'GroupForm',
+
+  propTypes: {
+    users: React.PropTypes.object,
+    groupUsers: React.PropTypes.array,
+    data: React.PropTypes.object,
+  },
+
+  getDefaultProps() {
+    return { users: {}, data: {}, groupUsers: [] };
+  },
 
   formChange(event) {
     const propName = event.target.dataset.key;
@@ -17,6 +26,7 @@ export default React.createClass({
   },
 
   render() {
+    const groupUsersArray = this.props.groupUsers.map((el) => el.id);
     return (<div>
       <section className={style.group}>
         <label className={style.label}>Name</label>
@@ -44,11 +54,20 @@ export default React.createClass({
         <section className={style.splitView}>
           <div className={style.splitViewItem}>
             <select className={ style.input } multiple>
+              { Object.keys(this.props.users).filter((id) => groupUsersArray.indexOf(id) === -1)
+                .map((id, ind) => <option
+                  key={id} value={id}>
+                  { this.props.users[id].login }
+                </option>) }
             </select>
             <button className={style.shareButton}>Add</button>
           </div>
           <div className={style.splitViewItem}>
             <select className={ style.input } multiple>
+              { this.props.groupUsers.map((el, ind) => <option
+                key={`${el._id}_${ind}`} value={el._id}>
+                { el.login }
+              </option>) }
             </select>
             <button className={style.shareButton}>Remove</button>
           </div>

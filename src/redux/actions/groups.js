@@ -6,6 +6,7 @@ export const PENDING_GROUP_NETWORK = 'PENDING_GROUP_NETWORK';
 export const GET_GROUPS = 'GET_GROUPS';
 export const ADD_GROUP = 'ADD_GROUP';
 export const SAVE_GROUP = 'SAVE_GROUP';
+export const REMOVE_GROUP = 'REMOVE_GROUP';
 export const DELETE_GROUP = 'DELETE_GROUP';
 export const UPDATE_ACTIVE_GROUP = 'UPDATE_ACTIVE_GROUP';
 export const LIST_USERS = 'LIST_USERS';
@@ -99,13 +100,17 @@ export function updateGroup(group) {
   };
 }
 
-export function deleteGroup(id) {
+export function deleteGroup(index, group) {
+  if (!group || !group._id) {
+    return { type: REMOVE_GROUP, index };
+  }
+
   return dispatch => {
     const action = netActions.addNetworkCall('delete_group', 'Delete group');
-    client.deleteGroup(id)
+    client.deleteGroup(group._id)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch({ type: DELETE_GROUP, id });
+        dispatch({ type: REMOVE_GROUP, index });
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));

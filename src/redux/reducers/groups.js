@@ -1,5 +1,4 @@
 import * as Actions from '../actions/groups';
-import deepClone    from 'mout/src/lang/deepClone';
 
 export const initialState = {
   list: [],
@@ -58,7 +57,7 @@ export default function groupReducer(state = initialState, action) {
       return Object.assign({}, state, { list, active });
     }
 
-    case Actions.DELETE_GROUP: {
+    case Actions.REMOVE_GROUP: {
       const list = state.list.filter((item, idx) => idx !== action.index);
       const group = state.list.filter((item, idx) => idx === action.index)[0];
       const active = (state.active < list.length) ? state.active : (list.length - 1);
