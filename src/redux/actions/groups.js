@@ -9,6 +9,7 @@ export const SAVE_GROUP = 'SAVE_GROUP';
 export const REMOVE_GROUP = 'REMOVE_GROUP';
 export const DELETE_GROUP = 'DELETE_GROUP';
 export const UPDATE_ACTIVE_GROUP = 'UPDATE_ACTIVE_GROUP';
+export const UPDATE_USER_LIST = 'UPDATE_USER_LIST';
 export const LIST_USERS = 'LIST_USERS';
 
 /* eslint-disable no-shadow */
@@ -70,34 +71,49 @@ export function addGroup() {
   return { type: ADD_GROUP };
 }
 
-export function saveGroup(index, group, pushToServer = false) {
-  const saveAction = { type: SAVE_GROUP, index, group };
-  if (pushToServer) {
+export function updateLocalGroup(index, group) {
+  return { type: SAVE_GROUP, index, group };
+}
+
+export function saveGroup(index, group) {
+  return dispatch => {
     const action = netActions.addNetworkCall('save_group', 'Save group');
     client.createGroup(group)
       .then(
         (resp) => {
           dispatch(netActions.successNetworkCall(action.id, resp));
+          dispatch(updateLocalGroup(index, resp.data));
         },
         (err) => {
           dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
         });
-  }
-  return saveAction;
+  };
 }
 
-export function updateGroup(group) {
-  return dispatch => {
-    const action = netActions.addNetworkCall('edit_group', 'Edit group');
-    client.editGroup(group)
-      .then((resp) => {
-        dispatch(netActions.successNetworkCall(action.id, resp));
-      })
-      .catch((err) => {
-        dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
-      });
-    return action;
-  };
+let debounce = null;
+
+function pushGroup(index, group) {
+  const action = netActions.addNetworkCall('edit_group', 'Edit group');
+  client.editGroup(group)
+    .then((resp) => {
+      dispatch(netActions.successNetworkCall(action.id, resp));
+    })
+    .catch((err) => {
+      dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
+    });
+}
+
+export function updateGroup(index, group) {
+  if (debounce) {
+    clearTimeout(debounce);
+    debounce = null;
+  }
+
+  if (group._id) {
+    debounce = setTimeout(() => pushGroup(index, group), 700);
+  }
+
+  return updateLocalGroup(index, group);
 }
 
 export function deleteGroup(index, group) {
@@ -110,7 +126,7 @@ export function deleteGroup(index, group) {
     client.deleteGroup(group._id)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch({ type: REMOVE_GROUP, index });
+        dispatch(getGroups());
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
@@ -119,21 +135,26 @@ export function deleteGroup(index, group) {
   };
 }
 
+function updateUserList(id, users) {
+  console.log(id, users);
+  return { type: UPDATE_USER_LIST, id, users };
+}
+
 export function addToGroup(groupId, userId) {
   return dispatch => {
     const action = netActions.addNetworkCall('add_to_group', 'Add user(s) to group');
     const addPromises = [];
     if (Array.isArray(userId) && userId.length) {
       userId.forEach((id) => {
-        addPromises.push(client.addGroupInvitation(groupId, { userId: id, force: true, quiet: false }));
+        addPromises.push(client.addGroupInvitation(groupId, { userId: id, level: 2, force: true }));
       });
     } else {
-      addPromises.push(client.removeUserFromGroup(groupId, { userId, force: true, quiet: false }));
+      addPromises.push(client.removeUserFromGroup(groupId, { userId, level: 2, force: true }));
     }
     Promise.all(addPromises)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch(getGroupUsers(groupId));
+        dispatch(updateUserList(groupId, resp[0].data.access.users));
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
@@ -156,6 +177,7 @@ export function removeFromGroup(groupId, userId) {
     Promise.all(removePromises)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
+        dispatch(updateUserList(groupId, resp[0].data.access.users));
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));

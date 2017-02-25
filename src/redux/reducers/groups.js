@@ -77,6 +77,12 @@ export default function groupReducer(state = initialState, action) {
       return newState;
     }
 
+    case Actions.UPDATE_USER_LIST: {
+      const usersByGroup = Object.assign({}, state.usersByGroup);
+      usersByGroup[action.id] = action.users;
+      return Object.assign({}, state, { usersByGroup });
+    }
+
     case Actions.UPDATE_ACTIVE_GROUP: {
       return Object.assign({}, state, { active: action.index });
     }

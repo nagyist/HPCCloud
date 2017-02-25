@@ -27,11 +27,17 @@ const GroupPrefs = React.createClass({
     users: React.PropTypes.object,
     user: React.PropTypes.object,
     error: React.PropTypes.string,
+
     onAddItem: React.PropTypes.func,
+    onSaveItem: React.PropTypes.func,
+    onUpdateItem: React.PropTypes.func,
     onRemoveItem: React.PropTypes.func,
+    onUpdateRemoteItem: React.PropTypes.func,
     onActiveChange: React.PropTypes.func,
     getGroups: React.PropTypes.func,
     getUsers: React.PropTypes.func,
+    addToGroup: React.PropTypes.func,
+    removeFromGroup: React.PropTypes.func,
   },
 
   componentDidMount() {
@@ -44,31 +50,55 @@ const GroupPrefs = React.createClass({
   },
 
   removeItem() {
+    if (!confirm('Are you sure you want to delete this group?')) {
+      return;
+    }
     const { list, active, onRemoveItem } = this.props;
     const groupToDelete = list[active];
-    if (groupToDelete._id && confirm('Are you sure you want to delete this group?')) {
-      onRemoveItem(active, groupToDelete);
-    } else if (!groupToDelete._id) {
-      onRemoveItem(active, groupToDelete);
-    }
+    onRemoveItem(active, groupToDelete);
+  },
 
-    this.setState({ _error: null });
+  saveItem() {
+    const { list, active, onSaveItem } = this.props;
+    onSaveItem(active, list[active]);
+  },
+
+  changeItem(item) {
+    const { active, onUpdateItem } = this.props;
+    onUpdateItem(active, item);
   },
 
   activeChange(active) {
     this.props.onActiveChange(active);
   },
 
-  render() {
+  addUsers(users) {
     const { active, list } = this.props;
     const activeData = active < list.length ? list[active] : null;
+    if (activeData) {
+      this.props.addToGroup(activeData._id, users);
+    }
+  },
+
+  removeUsers(users) {
+    const { active, list } = this.props;
+    const activeData = active < list.length ? list[active] : null;
+    if (activeData) {
+      this.props.removeFromGroup(activeData._id, users);
+    }
+  },
+
+  render() {
+    const clusterBreadCrumb = breadcrumb(this.props.user, 'Groups');
+    const { active, list } = this.props;
+    const activeData = active < list.length ? list[active] : null;
+    const actions = [{ name: 'removeItem', label: 'Delete Group', icon: style.deleteIcon, disabled: false }];
     let groupUsers = [];
-    if (activeData && activeData._id) {
+    if (activeData && activeData._id === undefined) {
+      actions.push({ name: 'saveItem', label: 'Save Group', icon: style.saveIcon, disabled: false });
+    } else if (activeData && activeData._id) {
       groupUsers = this.props.usersByGroup[activeData._id];
     }
-
-    const actions = [{ name: 'removeItem', label: 'Delete Group', icon: style.deleteIcon, disabled: false }];
-    const clusterBreadCrumb = breadcrumb(this.props.user, 'Groups');
 
     let content = null;
     if (list && list.length) {
@@ -77,6 +107,8 @@ const GroupPrefs = React.createClass({
           onChange={ this.changeItem }
           users={this.props.users}
           groupUsers={groupUsers}
+          onUserAdd={this.addUsers}
+          onUserRemove={this.removeUsers}
         />
         <hr />
         <ButtonBar
@@ -117,7 +149,6 @@ const GroupPrefs = React.createClass({
 export default connect(
   (state) => {
     const localState = state.groups;
-
     return {
       active: localState.active,
       list: localState.list,
@@ -131,10 +162,14 @@ export default connect(
   () => ({
     getGroups: () => dispatch(Actions.getGroups()),
     getUsers: () => dispatch(UserActions.getUsers()),
+    invalidateErrors: () => dispatch(NetActions.invalidateErrors(['save_group', 'remove_group'])),
+
     onAddItem: () => dispatch(Actions.addGroup()),
     onActiveChange: (index) => dispatch(Actions.updateActiveGroup(index)),
-    onUpdateItem: (index, group) => dispatch(Actions.saveGroup(index, group)),
+    onSaveItem: (index, group) => dispatch(Actions.saveGroup(index, group)),
+    onUpdateItem: (index, group) => dispatch(Actions.updateGroup(index, group)),
     onRemoveItem: (index, group) => dispatch(Actions.deleteGroup(index, group)),
-    invalidateErrors: () => dispatch(NetActions.invalidateErrors(['save_group', 'remove_group'])),
+    addToGroup: (groupId, users) => dispatch(Actions.addToGroup(groupId, users)),
+    removeFromGroup: (groupId, users) => dispatch(Actions.removeFromGroup(groupId, users)),
   })
 )(GroupPrefs);
