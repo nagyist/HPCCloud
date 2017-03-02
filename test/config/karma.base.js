@@ -3,6 +3,7 @@
 module.exports = {
   basePath: '..',
   client: {
+    // set to true if you're trying to read some console.log statement
     captureConsole: false
   },
   singleRun: true,
@@ -19,6 +20,12 @@ module.exports = {
   ],
   preprocessors: {
     'tests.webpack.js': ['webpack', 'sourcemap'],
+  },
+  webpackMiddleware: {
+      noInfo: true,
+      stats: {
+          chunks: false
+      }
   },
   coverageReporter: {
     reporters: [

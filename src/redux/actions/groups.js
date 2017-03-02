@@ -1,6 +1,6 @@
 import client from '../../network';
 import * as netActions from './network';
-import { store, dispatch } from '..';
+import { dispatch } from '..';
 
 export const PENDING_GROUP_NETWORK = 'PENDING_GROUP_NETWORK';
 export const GET_GROUPS = 'GET_GROUPS';
@@ -16,6 +16,10 @@ export const LIST_USERS = 'LIST_USERS';
 
 export function listUsers(groupId, users) {
   return { type: LIST_USERS, groupId, users };
+}
+
+function removeGroup(index, group) {
+  return { type: REMOVE_GROUP, group, index };
 }
 
 export function getGroupUsers(id) {
@@ -34,10 +38,7 @@ export function getGroupUsers(id) {
 }
 
 export function updateActiveGroup(index) {
-  return dispatch => {
-    dispatch(getGroupUsers(store.getState().groups.list[index]._id));
-    return { type: UPDATE_ACTIVE_GROUP, index };
-  };
+  return { type: UPDATE_ACTIVE_GROUP, index };
 }
 
 export function pendingNetworkCall(pending = true) {
@@ -118,7 +119,7 @@ export function updateGroup(index, group) {
 
 export function deleteGroup(index, group) {
   if (!group || !group._id) {
-    return { type: REMOVE_GROUP, index };
+    return { type: REMOVE_GROUP, index, group };
   }
 
   return dispatch => {
@@ -126,7 +127,7 @@ export function deleteGroup(index, group) {
     client.deleteGroup(group._id)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch(getGroups());
+        dispatch(removeGroup(index, group));
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
@@ -134,10 +135,6 @@ export function deleteGroup(index, group) {
     return action;
   };
 }
-
-// function updateUserList(id, users) {
-//   return { type: UPDATE_USER_LIST, id, users };
-// }
 
 export function addToGroup(groupId, userId) {
   return dispatch => {
