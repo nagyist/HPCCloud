@@ -3,7 +3,7 @@
 module.exports = {
   basePath: '..',
   client: {
-    captureConsole: true
+    captureConsole: false
   },
   singleRun: true,
   frameworks: ['jasmine'],

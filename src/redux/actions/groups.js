@@ -135,10 +135,9 @@ export function deleteGroup(index, group) {
   };
 }
 
-function updateUserList(id, users) {
-  console.log(id, users);
-  return { type: UPDATE_USER_LIST, id, users };
-}
+// function updateUserList(id, users) {
+//   return { type: UPDATE_USER_LIST, id, users };
+// }
 
 export function addToGroup(groupId, userId) {
   return dispatch => {
@@ -149,12 +148,12 @@ export function addToGroup(groupId, userId) {
         addPromises.push(client.addGroupInvitation(groupId, { userId: id, level: 2, force: true }));
       });
     } else {
-      addPromises.push(client.removeUserFromGroup(groupId, { userId, level: 2, force: true }));
+      addPromises.push(client.addGroupInvitation(groupId, { userId, level: 2, force: true }));
     }
     Promise.all(addPromises)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch(updateUserList(groupId, resp[0].data.access.users));
+        dispatch(getGroupUsers(groupId));
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
@@ -177,7 +176,7 @@ export function removeFromGroup(groupId, userId) {
     Promise.all(removePromises)
       .then((resp) => {
         dispatch(netActions.successNetworkCall(action.id, resp));
-        dispatch(updateUserList(groupId, resp[0].data.access.users));
+        dispatch(getGroupUsers(groupId));
       })
       .catch((err) => {
         dispatch(netActions.errorNetworkCall(action.id, err, 'form'));
