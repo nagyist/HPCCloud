@@ -58,6 +58,7 @@ const SharePanel = React.createClass({
       this.props.shareProject(this.props.shareItem._id,
         this.state.shareUsers, this.state.shareGroups);
     }
+    this.setState({ shareUsers: [], shareGroups: [] });
   },
 
   unShareAction(e) {
@@ -78,6 +79,7 @@ const SharePanel = React.createClass({
       this.props.unShareProject(this.props.shareItem._id,
         this.state.unShareUsers, this.state.unShareGroups);
     }
+    this.setState({ unShareUsers: [], unShareGroups: [] });
   },
 
   render() {
